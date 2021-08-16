@@ -113,7 +113,7 @@ fecha_data <- data3 %>%
   summarise(cantidad=n()) %>% 
   arrange(desc(cantidad))
 #A partir de esto, se puede observar que la mayoría de las unidades fueron registradas entre el 17 de Abril y el 18 de Abril del 2019, y solamente una el 5 de Mayo del 2019. Por lo tanto, esta data corresponde a registros pre-pandemia
-
+#Esta información resulta de utilidad ya que será utilizada para obtener el valor del dólar en aquel momento y poder llevar a dicha moneda los valores de alquiler de las unidades de Airbnb.
 
 
 
