@@ -1,6 +1,7 @@
+#Trabajo Práctico 1
+#Alumna: María Victoria Marco
+
 library(tidyverse)
-
-
 
 data <- read.csv("https://query.data.world/s/v7xpthpx5kvhyccn2gy2vukmx47qnx", header=TRUE, stringsAsFactors=FALSE)
 
@@ -92,3 +93,30 @@ dormitorios_deptos <- dormitorios %>%
 dormitorios_deptos %>% 
   summarise(mean(bedrooms))
 #En el caso de los departamentos (que son la gran mayor?a de las unidades), en promedio, continen un domritorio (1,09)
+
+
+#4. Ahora analizaremos la fecha de último scrapeo, para conocer de cuándo son los datos
+
+library(lubridate)
+
+class(data3$last_scraped)
+
+#Como la fecha de último scrapeo está como character, la pasaremos a date
+data3 <- data3 %>%
+  mutate(last_scraped=ymd(last_scraped))
+
+class(data3$last_scraped)
+#Ahora sí podemos hacer operaciones con la fecha
+
+fecha_data <- data3 %>%
+  group_by(last_scraped) %>%
+  summarise(cantidad=n()) %>% 
+  arrange(desc(cantidad))
+#A partir de esto, se puede observar que la mayoría de las unidades fueron registradas entre el 17 de Abril y el 18 de Abril del 2019, y solamente una el 5 de Mayo del 2019. Por lo tanto, esta data corresponde a registros pre-pandemia
+
+
+
+
+
+
+
