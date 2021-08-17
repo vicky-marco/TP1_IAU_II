@@ -8,14 +8,14 @@ data <- read.csv("https://query.data.world/s/v7xpthpx5kvhyccn2gy2vukmx47qnx", he
 summary(data)
 
 
-#Haremos una selecci?n de las variables que son de inter?s para este an?lisis, con el fin de trabajar con una base menos pesada  
+#Se hará una selección de las variables que son de interés para este análisis, con el fin de trabajar con una base menos pesada  
 data2 <- data %>% 
   select(id, listing_url, last_scraped, summary, description, host_id, host_since, latitude, 
          longitude, property_type, bathrooms, bedrooms, square_feet, price, monthly_price, 
          minimum_nights, maximum_nights, availability_30, availability_60, number_of_reviews, 
          review_scores_rating, review_scores_location, review_scores_value)
 
-#1.Analizaremos los anfitriones:
+#1.Se analizarán los anfitriones:
 
 #Para conocer los anfitriones con mayor cantidad de unidades de Airbnb y la cantidad de unidades
 id_hosts <- data2 %>%
@@ -36,12 +36,12 @@ id_hosts %>%
 #En promedio, las personas son anfitriones de 1,52 unidades (lo cual no es posible, pero nos permite pensar que gran parte de los anfitriones tiene m?s de una unidad)
 
 
-#2. Analizaremos el tipo de propiedad, para conocer c?mo son las unidades de Airbnb
+#2. Se analizará el tipo de propiedad, para conocer cómo son las unidades de Airbnb
 summary(data2$property_type)
 
 class(data2$property_type)
 
-#Mutaremos el dataset con el fin de renombrar bajo la categor?a "Other" a aquellos tipos de propiedades que son menos de 10 unidades, con el fin de simplificar la base.
+#Se mutará el dataset con el fin de renombrar bajo la categoría "Other" a aquellos tipos de propiedades que son menos de 10 unidades, con el fin de simplificar la base.
 data3 <- data2 %>% 
   mutate( property_type= case_when(
     property_type == "Chalet"  ~ "Other",
@@ -77,7 +77,7 @@ prop_type_data <- mutate(prop_type_data, porcentaje=((cantidad)/sum(cantidad))*1
 #Los departamentos constituyen el 79,2% de la oferta, seguidos muy por debajo por las casas:7,6%. 
 
 
-#3. Analizaremos la cantidad de dormitorios disponibles 
+#3. Se analizará la cantidad de dormitorios disponibles 
 
 dormitorios <- data2 %>% 
   select(latitude, longitude,bedrooms,price, property_type) %>% 
@@ -92,10 +92,10 @@ dormitorios_deptos <- dormitorios %>%
 
 dormitorios_deptos %>% 
   summarise(mean(bedrooms))
-#En el caso de los departamentos (que son la gran mayor?a de las unidades), en promedio, continen un domritorio (1,09)
+#En el caso de los departamentos (que son la gran mayoría de las unidades), en promedio, continen un domritorio (1,09)
 
 
-#4. Ahora analizaremos la fecha de último scrapeo, para conocer de cuándo son los datos
+#4. Ahora se estudiará la fecha de último scrapeo, para conocer de cuándo son los datos
 
 library(lubridate)
 
@@ -106,7 +106,7 @@ data3 <- data3 %>%
   mutate(last_scraped=ymd(last_scraped))
 
 class(data3$last_scraped)
-#Ahora sí podemos hacer operaciones con la fecha
+#Ahora sí se puede hacer operaciones con la fecha
 
 fecha_data <- data3 %>%
   group_by(last_scraped) %>%
@@ -115,8 +115,28 @@ fecha_data <- data3 %>%
 #A partir de esto, se puede observar que la mayoría de las unidades fueron registradas entre el 17 de Abril y el 18 de Abril del 2019, y solamente una el 5 de Mayo del 2019. Por lo tanto, esta data corresponde a registros pre-pandemia
 #Esta información resulta de utilidad ya que será utilizada para obtener el valor del dólar en aquel momento y poder llevar a dicha moneda los valores de alquiler de las unidades de Airbnb.
 
+#5. Ahora se realizará un breve análisis de los precios de alquiler de las unidades
 
+precios_data <- data3 %>% 
+  select(latitude, longitude, property_type, bathrooms, bedrooms, price, review_scores_rating)
 
+library(stringr)  
 
+class(precios_data$price)
+
+#Se eliminará el signo de pesos para poder hacer operaciones con los valores
+precios_data <- precios_data %>% 
+  filter(!is.na(price)) %>% 
+  mutate(precio=str_sub(price, 2,6)) 
+
+precios_data <- mutate(precios_data, precio2=str_replace(precio, ",", ""))
+
+#Ahora, se realizará un gráfico para poder tener una vista macro de los precios
+library(ggplot2)
+
+class(precios_data$precio2)
+
+ggplot(precios_data)+
+  geom_histogram(aes(x=as.numeric(precio2)))
 
 
