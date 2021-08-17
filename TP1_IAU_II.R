@@ -137,6 +137,12 @@ library(ggplot2)
 class(precios_data$precio2)
 
 ggplot(precios_data)+
-  geom_histogram(aes(x=as.numeric(precio2)))
+  geom_histogram(aes(x=as.numeric(precio2)))+
+  scale_x_continuous(breaks=seq(0,6000,1000))+
+  labs(title = "Precio de unidades de Airbnb",
+       subtitle = "Abril / Mayo 2019",
+       x = "Precio",
+       y = "Cantidad")
+  
 
 
