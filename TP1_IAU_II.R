@@ -186,8 +186,17 @@ ggmap(mapa_caba) +
        x="Longitud",y="Latitud")
 #A partir de este mapa se evidencia mejor la densidad de las unidades, permitiendo ver que la mayor parte de las unidades de Airbnb se localizan en la zona del Microcentro, Retiro, Recoleta y Palermo.
 
+bus_turis <- read.csv("https://raw.githubusercontent.com/vicky-marco/TP1_IAU_II/master/paradas_bus_turistico%20(1).csv", stringsAsFactors = FALSE)
 
-
+#Ahora, se realizará otro mapa para poder cruzar la densidad de las unidades de Airbnb y las paradas del bus turístico
+ggmap(mapa_caba) +
+  geom_bin2d(data = data3, 
+             aes(x = longitude, y = latitude), bins=50)+
+  scale_fill_viridis_c(option = "magma", direction=-1)+
+  geom_point(data = bus_turis, aes(y=lat, x=long))+
+  labs(title = "Densidad de unidades de Airbnb y paradas del bus turístico de CABA",
+       caption = "Fuente: SF Data",
+       x="Latitud",y="Longitud")
 
 
 
