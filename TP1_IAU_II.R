@@ -145,4 +145,49 @@ ggplot(precios_data)+
        y = "Cantidad")
   
 
+library(leaflet)
+library(sf)
+library(ggmap)
+library(osmdata)
+
+
+data3_geo <- data3 %>% 
+  filter(!is.na(latitude), !is.na(longitude)) %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+#No correr lo siguiente porque se tilda
+#leaflet(data3_geo) %>%
+  #addTiles() %>%
+  #addMarkers()
+
+bbox_caba <- getbb("Ciudad Autónoma de Buenos Aires, Argentina")
+
+bbox_caba
+
+mapa_caba <- get_stamenmap(bbox = bbox_caba,
+                          zoom=12)
+
+ggmap(mapa_caba)
+
+ggmap(mapa_caba)+
+  geom_sf(data=data3_geo, size=1, alpha=0.5, color="blue", inherit.aes = FALSE)+
+  labs(title="Unidades de Airbnb en CABA (2019)",
+       caption="Fuente: Open Street Map")+
+  theme_void()
+#Este mapa permite ver la gran cantidad de unidades de Airbnb en el Microcentro y Corredor Norte de la Ciudad, pero no permite ver en detalle la densidad
+
+#Para ver la densidad,se hará el siguiente mapa:
+ggmap(mapa_caba) +
+  geom_bin2d(data = data3, 
+             aes(x = longitude, y = latitude), bins=50)+
+  scale_fill_viridis_c(option = "magma", direction=-1)+
+  labs(title = "Densidad de unidades de Airbnb",
+       caption = "Fuente: SF Data",
+       x="Longitud",y="Latitud")
+#A partir de este mapa se evidencia mejor la densidad de las unidades, permitiendo ver que la mayor parte de las unidades de Airbnb se localizan en la zona del Microcentro, Retiro, Recoleta y Palermo.
+
+
+
+
+
 
