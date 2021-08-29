@@ -237,8 +237,8 @@ ggmap(mapa_caba) +
              aes(x = longitude, y = latitude), bins=70, alpha=0.7)+
   scale_fill_viridis_c(option = "magma", direction=-1)+
   geom_point(data = bus_turis2, aes(y=lat, x=long, color=recorrido))+
-  scale_color_manual(values = c("dodgerblue4", "firebrick", "forestgreen"))
-  labs(title = "Densidad de unidades de Airbnb y paradas del bus turístico de CABA",
+  scale_color_manual(values = c("dodgerblue4", "firebrick", "forestgreen"))+
+  labs(title = "Densidad de unidades de Airbnb y paradas del bus turístico (según recorrido) de CABA",
        caption = "Fuente: SF Data",
        x="Latitud",y="Longitud")
 #Se puede observar que todos los recorridos tienen al menos una parada cerca de las grandes densidades de unidades de Airbnb. Sin embargo, es llamativo el recorrido rojo, ya que gran parte de las unidades de Airbnb se encuentran cerca de todas sus paradas.
@@ -254,5 +254,24 @@ bus_turis_barrios <- bus_turis2 %>%
 #Se puede observar que solo 9 barrios (Palermo, Puerto Madero, Belgrano, La Boca, Recoleta, Retiro, San Nicolás, Monserrat, San Telmo) poseen paradas en su territorio.
 
 #Ahora, se importará un dataset con información sobre los barrios. 
+
+barrios <- read.csv("https://raw.githubusercontent.com/vicky-marco/TP1_IAU_II/master/barrios.csv", stringsAsFactors = TRUE,
+                      encoding = "UTF-8")
+
+#Ahora se realizará una unión de la información a partir del nombre de cada barrio.
+bus_turis_barrios <- bus_turis_barrios %>% 
+  mutate(barrio=toupper(barrio)) %>% 
+  rename("cant_parada_bus"=cantidad)
+
+bus_turis_barrios2 <- left_join(bus_turis_barrios, barrios, by=c("barrio"="barrio"))
+
+options(scipen=100)
+
+bus_turis_barrios2 <-bus_turis_barrios2 %>% 
+  mutate(area=area/1000000) %>% 
+  mutate(indice=area/cant_parada_bus) %>% 
+  mutate(indice=round(indice,2))
+
+
 
 
