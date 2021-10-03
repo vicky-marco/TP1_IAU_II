@@ -222,127 +222,26 @@ barrios <- st_transform(barrios, crs=st_crs(valor_m2_barrio))
 valor_m2_barrio <-st_join (valor_m2_barrio, barrios)
 
 valor_m2_barrio_resumen <- valor_m2_barrio %>% 
-  group_by(BARRIO, valor_m2_pesos) %>% 
-  summarise(mean(valor_m2_pesos))
-
-
-
-
-library(leaflet)
-
-library(ggmap)
-library(osmdata)
-
-#6. SE mapearan las unidades de Airbnb en alquiler, con el fin de conocer sus ubicaciones en CABA
-data3_geo <- data3 %>% 
-  filter(!is.na(latitude), !is.na(longitude)) %>% 
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-
-
-bbox_caba <- getbb("Ciudad Autónoma de Buenos Aires, Argentina")
-
-bbox_caba
-
-mapa_caba <- get_stamenmap(bbox = bbox_caba,
-                          zoom=12)
-
-ggmap(mapa_caba)
-
-ggmap(mapa_caba)+
-  geom_sf(data=data3_geo, size=1, alpha=0.5, color="blue", inherit.aes = FALSE)+
-  labs(title="Unidades de Airbnb en CABA (2019)",
-       caption="Fuente: Open Street Map")+
-  theme_void()
-#Este mapa permite ver la gran cantidad de unidades de Airbnb en el Microcentro y Corredor Norte de la Ciudad, pero no permite ver en detalle la densidad (ya que puede haber puntos superpuestos)
-
-#Para ver la densidad,se hará el siguiente mapa:
-ggmap(mapa_caba) +
-  geom_bin2d(data = data3, 
-             aes(x = longitude, y = latitude), bins=50)+
-  scale_fill_viridis_c(option = "magma", direction=-1)+
-  labs(title = "Densidad de unidades de Airbnb",
-       caption = "Fuente: SF Data",
-       x="Longitud",y="Latitud")
-#A partir de este mapa se evidencia mejor la densidad de las unidades, permitiendo ver que la mayor parte de las unidades de Airbnb se localizan en la zona del Microcentro, Retiro, Recoleta y Palermo.
-#Por el contrario, en el sur de la Ciudad hay muy pocos (o no hay) unidades de Airbnb.
-
-
-POR ACA!!!!
-
-
-
-#Se sumará la base de paradas del Bus Turístico de la Ciudad de Buenos Aires para poder evaluar si dichas paradas se encuentran cerca de las unidades de Airbnb.
-bus_turis <- read.csv("https://raw.githubusercontent.com/vicky-marco/TP1_IAU_II/master/paradas_bus_turistico%20(1).csv", stringsAsFactors = TRUE,
-                      encoding = "UTF-8")
-
-head(bus_turis)
-#Se puede observar que esta base posee información sobre las paradas del Bus Turístico: geolocalización, recorrido, atracciones cercanas, barrio, comuna, etc.
-
-#Se realizará una selección de las columnas que son de interés para este estudio
-bus_turis2 <- bus_turis %>% 
-  select(1:8, 13:14)
-
-
-bus_turis_recorridos <- bus_turis2 %>%
-  group_by(recorrido) %>%
-  summarise(cantidad=n()) %>% 
-  arrange(desc(cantidad))
-#A partir de esto se puede observar que el recorrido con mayor cantidad de paradas es el Azul.
-
-
-
-#Ahora, se realizará otro mapa para poder cruzar la densidad de las unidades de Airbnb y las paradas del Bus Turístico
-ggmap(mapa_caba) +
-  geom_bin2d(data = data3, 
-             aes(x = longitude, y = latitude), bins=50)+
-  scale_fill_viridis_c(option = "magma", direction=-1)+
-  geom_point(data = bus_turis2, aes(y=lat, x=long), color="deepskyblue4")+
-  labs(title = "Densidad de unidades de Airbnb y paradas del bus turístico de CABA",
-       caption = "Fuente: SF Data",
-       x="Latitud",y="Longitud")
-#A través de este mapa se puede observar que las áreas más densas, en cuanto a unidades de Airbnb, se encuentran cerca de las paradas del Bus Turístico.
-
-#Ahora se analizarán las paradas de los diferentes recorridos del Bus Turístico
-ggmap(mapa_caba) +
-  geom_bin2d(data = data3, 
-             aes(x = longitude, y = latitude), bins=70, alpha=0.7)+
-  scale_fill_viridis_c(option = "magma", direction=-1)+
-  geom_point(data = bus_turis2, aes(y=lat, x=long, color=recorrido))+
-  scale_color_manual(values = c("dodgerblue4", "firebrick", "forestgreen"))+
-  labs(title = "Densidad de unidades de Airbnb y paradas del bus turístico (según recorrido) de CABA",
-       caption = "Fuente: SF Data",
-       x="Latitud",y="Longitud")
-#Se puede observar que todos los recorridos tienen al menos una parada cerca de las grandes densidades de unidades de Airbnb. Sin embargo, es llamativo el recorrido rojo, ya que gran parte de las unidades de Airbnb se encuentran cerca de todas sus paradas.
+  group_by(BARRIO) %>%
+  summarise(cantidad=n(),
+            valor_m2_prom=mean(valor_m2_pesos))
   
-#Estos mapas permiten observar que las paradas se encuentran en el corredor Norte de la Ciudad y en el Microcentro/San Telmo/La Boca.
-#Por lo tanto, resulta interesante intentar generar un índice sobre la cantidad de paradas según la superficie de cada barrio. 
-#Para ello, primero se conocerá cuáles son los barrios que sí poseen paradas del Bus Turístico.
+ggplot(valor_m2_barrio_resumen) +
+  geom_col(aes(x = valor_m2_prom, y= reorder(BARRIO, valor_m2_prom), fill="coral2"))+
+  labs(title = "Valor promedio del m2 de las unidades de Airbnb en alquiler",
+       subtitle = "Año 2019",
+       x = "Valor promedio del m2 (en pesos)",
+       y = "Barrio")+
+  theme_minimal()+
+  theme(legend.position = "none")
+  
+#A partir del gráfico anterior se evidencia que los mayores valores promedios del m2 de alquiler de unidades Airbnb se encuentran en: San Nicolás, Boedo, Balvanera, San Cristobal y Villa Crespo.
+#Vale aclarar que puede haber muchas variables interviniendo en este análisis y dando esos resultados. Por un lado, la cantidad de unidades disponibles por barrio, ya que si hay pocas unidades pero una con un alto valor del m2, "tira hacia arriba" el promedio (por ejemplo, en Boedo hay solo 2 unidades).
+#Por el contrario, en Palermo hay 96 unidades, por lo tanto, al calcular el promedio, los valores altos del m2 pueden compensarse con los bajos, ya que son muchas unidades. 
+#Por otro lado, puede que esté mal registrada la cantidad de metros cuadrados también. Si están sobreregistradas, los valores promedios del m2 darán más bajos.
 
-bus_turis_barrios <- bus_turis2 %>%
-  group_by(barrio) %>%
-  summarise(cantidad=n()) %>% 
-  arrange(desc(cantidad))
-#Se puede observar que solo 9 barrios (Palermo, Puerto Madero, Belgrano, La Boca, Recoleta, Retiro, San Nicolás, Monserrat, San Telmo) poseen paradas en su territorio.
 
-#Ahora, se importará un dataset con información sobre los barrios. 
-
-barrios <- read.csv("https://raw.githubusercontent.com/vicky-marco/TP1_IAU_II/master/barrios.csv", stringsAsFactors = TRUE,
-                      encoding = "UTF-8")
-
-#Ahora se realizará una unión de la información a partir del nombre de cada barrio.
-bus_turis_barrios <- bus_turis_barrios %>% 
-  mutate(barrio=toupper(barrio)) %>% 
-  rename("cant_parada_bus"=cantidad)
-
-bus_turis_barrios2 <- left_join(bus_turis_barrios, barrios, by=c("barrio"="barrio"))
-
-options(scipen=100)
-
-bus_turis_barrios2 <-bus_turis_barrios2 %>% 
-  mutate(area=area/1000000) %>% 
-  mutate(indice=area/cant_parada_bus) %>% 
-  mutate(indice=round(indice,2))
-
+#Conclusiones
 
 
 
