@@ -1,4 +1,4 @@
-#Trabajo Práctico 1
+#Trabajo Práctico 1 (Análisis de información sobre Airbnb)
 #Alumna: María Victoria Marco
 
 #En este trabajo práctico se buscará analizar los datos disponibles (a partir de una base obtenida de internet) sobre Airbnb, para poder caracterizar dicho fenómeno en la Ciudad de Buenos Aires.
@@ -147,7 +147,7 @@ precios_data <- precios_data %>%
   mutate(precio3=(as.numeric(precio2)/42.95))
 
 
-#Ahora, se realizarán dos gráficos para poder tener una vista macro de los precios de alquiler
+#Ahora se realizarán dos gráficos para poder tener una vista macro de los precios de alquiler
 library(ggplot2)
 
 class(precios_data$precio3)
@@ -227,21 +227,32 @@ valor_m2_barrio_resumen <- valor_m2_barrio %>%
             valor_m2_prom=mean(valor_m2_pesos))
   
 ggplot(valor_m2_barrio_resumen) +
-  geom_col(aes(x = valor_m2_prom, y= reorder(BARRIO, valor_m2_prom), fill="coral2"))+
+  geom_col(aes(x = valor_m2_prom, y= reorder(BARRIO, valor_m2_prom), fill="Valor m2 en pesos"))+
+  geom_point(data= valor_m2_barrio_resumen, aes (x=cantidad, y=BARRIO, color="Cantidad"))+
   labs(title = "Valor promedio del m2 de las unidades de Airbnb en alquiler",
        subtitle = "Año 2019",
        x = "Valor promedio del m2 (en pesos)",
        y = "Barrio")+
   theme_minimal()+
-  theme(legend.position = "none")
-  
+    scale_color_manual(values = c("Cantidad"= "coral4"),name = NULL,
+                    guide = guide_legend(override.aes = list(linetype = "blank")))+
+  scale_fill_manual(values = c("Valor m2 en pesos"= "coral2"), name = "Referencias",
+                    guide = guide_legend(override.aes = list(linetype = "blank", shape = NA)))+
+  theme(legend.position = "right")
+
+
 #A partir del gráfico anterior se evidencia que los mayores valores promedios del m2 de alquiler de unidades Airbnb se encuentran en: San Nicolás, Boedo, Balvanera, San Cristobal y Villa Crespo.
 #Vale aclarar que puede haber muchas variables interviniendo en este análisis y dando esos resultados. Por un lado, la cantidad de unidades disponibles por barrio, ya que si hay pocas unidades pero una con un alto valor del m2, "tira hacia arriba" el promedio (por ejemplo, en Boedo hay solo 2 unidades).
+#Lo mismo ocurre con San Cristobal, donde solo hay 3 unidades en oferta.
 #Por el contrario, en Palermo hay 96 unidades, por lo tanto, al calcular el promedio, los valores altos del m2 pueden compensarse con los bajos, ya que son muchas unidades. 
 #Por otro lado, puede que esté mal registrada la cantidad de metros cuadrados también. Si están sobreregistradas, los valores promedios del m2 darán más bajos.
 
 
 #Conclusiones
-
+#A partir de este primer trabajo práctico fue posible analizar la oferta de unidades de Airbnb en Abril/Mayo del 2019, es decir, pre pandemia.
+#Se puedo observar que hay algunos anfitriones que poseen más de una unidad disponible para alquiler. Sin embargo, la mayoría posee uno.
+#El tipo de propiedad en alquiler a través de Airbnb que abunda es el departamento. 
+#La mayoría de las unidades de alquiler disponen de solamente 1 dormitorio.
+#En cuanto a los precios de alquiler, hacia Abril/Mayo 2019 el promedio era de ARS 2.000 la noche. A partir de dicho precio, se puedo conocer que el valor promedio del m2 de las unidades era de $10,31. El mayor valor promedio del m2 se registró en el barrio de San Nicolás ($29,29) y el menor, en Parque Patricios ($0,44)
 
 
