@@ -1,7 +1,12 @@
 #Trabajo Práctico 1
 #Alumna: María Victoria Marco
 
+#En este trabajo práctico se buscará analizar los datos disponibles (a partir de una base obtenida de internet) sobre Airbnb, para poder caracterizar dicho fenómeno en la Ciudad de Buenos Aires.
+
+
 library(tidyverse)
+
+#En primer lugar, se descargará la base de datos
 
 data <- read.csv("https://query.data.world/s/v7xpthpx5kvhyccn2gy2vukmx47qnx", header=TRUE, stringsAsFactors=FALSE)
 
@@ -17,7 +22,8 @@ data2 <- data %>%
 
 #1.Se analizarán los anfitriones:
 
-#Para conocer los anfitriones con mayor cantidad de unidades de Airbnb y la cantidad de unidades
+#Resulta interesante conocer si hay anfitriones que ofrecen más de 1 unidad. Para ello:
+
 id_hosts <- data2 %>%
   group_by(host_id) %>%
   summarise(cantidad=n()) %>% 
@@ -33,7 +39,11 @@ id_hosts %>%
 
 id_hosts %>% 
   summarise(promedio = sum(cantidad)/length(unique(host_id)))
-#En promedio, las personas son anfitriones de 1,52 unidades (lo cual no es posible, pero nos permite pensar que gran parte de los anfitriones tiene m?s de una unidad)
+#En promedio, las personas son anfitriones de 1,52 unidades (lo cual no es posible, pero permite pensar que gran parte de los anfitriones tiene más de una unidad)
+
+id_hosts %>% 
+  summarise(median(cantidad))
+#Por otro lado, la mediana es 1, por lo tanto, se observa que más de la mitad de los anfitriones tienen solo 1 unidad, ya que la mediana es el valor que divide a las frecuencias en dos partes iguales. 
 
 
 #2. Se analizará el tipo de propiedad, para conocer cómo son las unidades de Airbnb
@@ -68,16 +78,17 @@ prop_type_data <- data3 %>%
   group_by(property_type) %>%
   summarise(cantidad=n()) %>% 
   arrange(desc(cantidad))
-#De esta forma se evidencia que gran parte de las unidades de Airbnb son departamentos.
+#De esta forma se evidencia que gran parte de las unidades de Airbnb son departamentos (precisamente, 14826).
 
-prop_type_data %>% 
-  summarise(porcentaje = ((cantidad)/sum(cantidad))*100)
+calcular_pct <- function(data){
+  round(data/(sum(data, na.rm = FALSE))*100,1)}
 
-prop_type_data <- mutate(prop_type_data, porcentaje=((cantidad)/sum(cantidad))*100)
-#Los departamentos constituyen el 79,2% de la oferta, seguidos muy por debajo por las casas:7,6%. 
+prop_type_data <- prop_type_data %>% 
+  mutate(pct=calcular_pct(data= cantidad))
+#Los departamentos constituyen el 79,2% de la oferta, seguidos muy por debajo por las casas:7,7%. 
 
 
-#3. Se analizará la cantidad de dormitorios disponibles 
+#3. Se analizará la cantidad de dormitorios disponibles en las unidades 
 
 dormitorios <- data2 %>% 
   select(latitude, longitude,bedrooms,price, property_type) %>% 
@@ -93,7 +104,6 @@ dormitorios_deptos <- dormitorios %>%
 dormitorios_deptos %>% 
   summarise(mean(bedrooms))
 #En el caso de los departamentos (que son la gran mayoría de las unidades), en promedio, continen un domritorio (1,09)
-
 
 #4. Ahora se estudiará la fecha de último scrapeo, para conocer de cuándo son los datos
 
@@ -112,13 +122,13 @@ fecha_data <- data3 %>%
   group_by(last_scraped) %>%
   summarise(cantidad=n()) %>% 
   arrange(desc(cantidad))
-#A partir de esto, se puede observar que la mayoría de las unidades fueron registradas entre el 17 de Abril y el 18 de Abril del 2019, y solamente una el 5 de Mayo del 2019. Por lo tanto, esta data corresponde a registros pre-pandemia
+#A partir de esto se puede observar que la mayoría de las unidades fueron recogidas de la web entre el 17 de Abril y el 18 de Abril del 2019, y solamente una el 5 de Mayo del 2019. Por lo tanto, esta data corresponde a registros pre-pandemia
 #Esta información resulta de utilidad ya que será utilizada para obtener el valor del dólar en aquel momento y poder llevar a dicha moneda los valores de alquiler de las unidades de Airbnb.
 
 #5. Ahora se realizará un breve análisis de los precios de alquiler de las unidades
 
 precios_data <- data3 %>% 
-  select(latitude, longitude, property_type, bathrooms, bedrooms, price, review_scores_rating)
+  select(latitude, longitude, property_type, bathrooms, bedrooms, price, review_scores_rating, square_feet)
 
 library(stringr)  
 
@@ -132,42 +142,98 @@ precios_data <- precios_data %>%
 precios_data <- mutate(precios_data, precio2=str_replace(precio, ",", ""))
 
 #Se convertirán los valores a dólares (tomando el tipo de cambio del 18/04/2019: valor del dólar para la venta:$42.95).
-#(En el próximo trabajo práctico se trabajará con el scrapeo de valores del dólar)
 
 precios_data <- precios_data %>% 
   mutate(precio3=(as.numeric(precio2)/42.95))
 
 
-#Ahora, se realizará un gráfico para poder tener una vista macro de los precios
+#Ahora, se realizarán dos gráficos para poder tener una vista macro de los precios de alquiler
 library(ggplot2)
 
 class(precios_data$precio3)
 
 ggplot(precios_data)+
-  geom_histogram(aes(x=as.numeric(precio2)))+
+  geom_histogram(aes(x=as.numeric(precio2), fill="coral2"))+
   scale_x_continuous(breaks=seq(0,6000,1000))+
   labs(title = "Precio de unidades de Airbnb (en pesos)",
        subtitle = "Abril / Mayo 2019",
        x = "Precio",
-       y = "Cantidad")
+       y = "Cantidad")+
+  theme_minimal()+
+  theme(legend.position = "none")
 
 #La mayoría de los valores se encuentran por debajo de los $2.000
 
 ggplot(precios_data)+
-  geom_histogram(aes(x=as.numeric(precio3)))+
+  geom_histogram(aes(x=as.numeric(precio3), fill="coral2"))+
   labs(title = "Precio de unidades de Airbnb (en dólares)",
        subtitle = "Abril / Mayo 2019",
        x = "Precio",
-       y = "Cantidad")  
+       y = "Cantidad")+
+  theme_minimal()+
+  theme(legend.position = "none")
 #La mayoría de los valores se encuentran por debajo de los USD 50.
+
+#A partir de la información obtenida sobre el valor de alquiler de las unidades, es posible calcular el valor del m2 
+
+valor_m2 <- precios_data %>% 
+  filter(!is.na(square_feet)) %>% 
+  filter(!square_feet==0)
+
+class(valor_m2$square_feet)
+
+class(valor_m2$precio2)
+
+class(valor_m2$precio3)
+
+valor_m2 <- valor_m2 %>% 
+  mutate(valor_m2_pesos=as.numeric(precio2)/square_feet) %>% 
+  mutate(valor_m2_usd=precio3/square_feet)
+
+valor_m2 %>% 
+  summarise(mean(valor_m2_pesos)) 
+#El valor promedio del alquiler del m2 en pesos es de $10,31
+
+valor_m2 %>% 
+  summarise(mean(valor_m2_usd))
+#Mientras que, en el caso del valor de alquiler en dólares, el valor promedio del m2 es de 0,24USD. 
+
+#Estos valores podrían resultar un poco extraños, ya que parecen ser muy bajos. Por lo tanto, se intentará conocer la mediana
+
+valor_m2 %>% 
+  summarise(median(valor_m2_pesos))
+#En el caso de los valores en pesos, la mediana es de $4,45. Por lo tanto, se evidencia que hay dispersión en los datos porque al menos para la mitad de las unidades de Airbnb el valor del m2 es $4,48 o más.
+
+#Por otro lado, resultaría interesante conocer si el valor del m2 varía según el barrio en el que se encuentra la unidad de Airbnb en alquiler. Para ello:
+
+barrios <- st_read("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/barrios/barrios.geojson")
+
+library(sf)
+
+valor_m2_barrio <- valor_m2 %>% 
+  filter(!is.na(latitude), !is.na(longitude)) %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+str(valor_m2_barrio)
+str(barrios)
+
+barrios <- st_transform(barrios, crs=st_crs(valor_m2_barrio))
+
+valor_m2_barrio <-st_join (valor_m2_barrio, barrios)
+
+valor_m2_barrio_resumen <- valor_m2_barrio %>% 
+  group_by(BARRIO, valor_m2_pesos) %>% 
+  summarise(mean(valor_m2_pesos))
+
+
 
 
 library(leaflet)
-library(sf)
+
 library(ggmap)
 library(osmdata)
 
-
+#6. SE mapearan las unidades de Airbnb en alquiler, con el fin de conocer sus ubicaciones en CABA
 data3_geo <- data3 %>% 
   filter(!is.na(latitude), !is.na(longitude)) %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
@@ -200,7 +266,12 @@ ggmap(mapa_caba) +
 #A partir de este mapa se evidencia mejor la densidad de las unidades, permitiendo ver que la mayor parte de las unidades de Airbnb se localizan en la zona del Microcentro, Retiro, Recoleta y Palermo.
 #Por el contrario, en el sur de la Ciudad hay muy pocos (o no hay) unidades de Airbnb.
 
-#SE sumará la base de paradas del Bus Turístico de la Ciudad de Buenos Aires para poder evaluar si dichas paradas se encuentran cerca de las unidades de Airbnb.
+
+POR ACA!!!!
+
+
+
+#Se sumará la base de paradas del Bus Turístico de la Ciudad de Buenos Aires para poder evaluar si dichas paradas se encuentran cerca de las unidades de Airbnb.
 bus_turis <- read.csv("https://raw.githubusercontent.com/vicky-marco/TP1_IAU_II/master/paradas_bus_turistico%20(1).csv", stringsAsFactors = TRUE,
                       encoding = "UTF-8")
 
