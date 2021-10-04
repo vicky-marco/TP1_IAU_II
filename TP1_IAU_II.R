@@ -206,9 +206,9 @@ valor_m2 %>%
 
 #Por otro lado, resultaría interesante conocer si el valor del m2 varía según el barrio en el que se encuentra la unidad de Airbnb en alquiler. Para ello:
 
-barrios <- st_read("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/barrios/barrios.geojson")
-
 library(sf)
+
+barrios <- st_read("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/barrios/barrios.geojson")
 
 valor_m2_barrio <- valor_m2 %>% 
   filter(!is.na(latitude), !is.na(longitude)) %>% 
@@ -228,17 +228,17 @@ valor_m2_barrio_resumen <- valor_m2_barrio %>%
   
 ggplot(valor_m2_barrio_resumen) +
   geom_col(aes(x = valor_m2_prom, y= reorder(BARRIO, valor_m2_prom), fill="Valor m2 en pesos"))+
-  geom_point(data= valor_m2_barrio_resumen, aes (x=cantidad, y=BARRIO, color="Cantidad"))+
-  labs(title = "Valor promedio del m2 de las unidades de Airbnb en alquiler",
+  geom_point(data= valor_m2_barrio_resumen, aes (x=cantidad, y=BARRIO, color="Cantidad de unidades en alquiler"))+
+  labs(title = "Valor promedio del m2 y cantidad de unidades de Airbnb en alquiler",
        subtitle = "Año 2019",
        x = "Valor promedio del m2 (en pesos)",
        y = "Barrio")+
   theme_minimal()+
-    scale_color_manual(values = c("Cantidad"= "coral4"),name = NULL,
-                    guide = guide_legend(override.aes = list(linetype = "blank")))+
+  scale_color_manual(values = c("Cantidad de unidades en alquiler"= "coral4"),name = NULL,
+                     guide = guide_legend(override.aes = list(linetype = "blank")))+
   scale_fill_manual(values = c("Valor m2 en pesos"= "coral2"), name = "Referencias",
                     guide = guide_legend(override.aes = list(linetype = "blank", shape = NA)))+
-  theme(legend.position = "right")
+  theme(legend.position = "right", legend.title = element_text(size = 10), legend.text = element_text(size = 7))
 
 
 #A partir del gráfico anterior se evidencia que los mayores valores promedios del m2 de alquiler de unidades Airbnb se encuentran en: San Nicolás, Boedo, Balvanera, San Cristobal y Villa Crespo.
